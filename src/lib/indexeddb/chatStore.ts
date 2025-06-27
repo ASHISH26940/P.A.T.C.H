@@ -1,8 +1,7 @@
 /**
  * t3-chat-frontend/lib/indexeddb/chatStore.ts
  *
- * This version fixes the "ConstraintError" by removing the incorrect
- * unique index on the conversationId.
+ * This version removes the rename functionality and only includes delete.
  */
 import Dexie, { Table } from 'dexie';
 import { BackendChatMessage } from '@/types/api';
@@ -19,9 +18,6 @@ export class ChatDatabase extends Dexie {
 
   constructor() {
     super('t3ChatDB');
-    // **CRITICAL FIX:**
-    // 1. Bump the version number from 2 to 3 to trigger a schema upgrade.
-    // 2. Remove the ampersand (&) from `[userId+conversationId]` to make the index non-unique.
     this.version(3).stores({
       chatHistory: '++id, userId, conversationId, timestamp',
     });
@@ -33,7 +29,6 @@ export const db = new ChatDatabase();
 export async function addMessageToDB(message: BackendChatMessage): Promise<number> {
   try {
     const id = await db.chatHistory.add(message);
-    console.log(`Message for conversation ${message.conversationId} added to Dexie.`);
     return id;
   } catch (error) {
     console.error('Failed to add message to Dexie:', error);
@@ -75,7 +70,7 @@ export async function getConversationList(userId: string): Promise<Conversation[
             if (!conversationMap.has(message.conversationId)) {
                 conversationMap.set(message.conversationId, {
                     id: message.conversationId,
-                    title: message.content, // Use first message as title
+                    title: message.content,
                     timestamp: message.timestamp,
                 });
             }
@@ -84,13 +79,25 @@ export async function getConversationList(userId: string): Promise<Conversation[
     return Array.from(conversationMap.values()).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
+/**
+ * Deletes all messages associated with a specific conversation.
+ * @param userId - The ID of the user.
+ * @param conversationId - The ID of the conversation to delete.
+ */
+export async function deleteConversation(userId: string, conversationId: string): Promise<void> {
+    await db.chatHistory
+        .where({ userId, conversationId })
+        .delete();
+    console.log(`Deleted conversation ${conversationId}`);
+}
+
+
 export async function clearHistoryFromDB(userId: string): Promise<void> {
   try {
     await db.chatHistory
       .where('userId')
       .equals(userId)
       .delete();
-    console.log(`Cleared all chat history for user ${userId} from Dexie.`);
   } catch (error) {
     console.error(`Failed to clear history for user ${userId} from Dexie:`, error);
     throw error;

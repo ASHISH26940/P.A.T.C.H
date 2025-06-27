@@ -28,7 +28,8 @@ export const LoginForm: React.FC = () => {
     try {
       await loginUser({ username, password });
       // On successful login, redirect to the main chat page
-      router.push('/chat');
+      const newChatId = crypto.randomUUID();
+      router.replace(`/chat/${newChatId}`);
     } catch (err: any) {
       setError(err.message || 'An unknown error occurred.');
     } finally {
