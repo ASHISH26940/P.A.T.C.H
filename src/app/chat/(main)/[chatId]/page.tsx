@@ -56,7 +56,7 @@ export default function ChatPage() {
         </div>
       )}
 
-      <ChatWindow messages={messages} onSuggestionClick={handleSendMessage} />
+      <ChatWindow messages={messages} onSuggestionClick={handleSendMessage} username={user.username} />
       <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
     </div>
   );

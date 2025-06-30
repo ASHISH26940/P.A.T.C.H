@@ -28,7 +28,7 @@ export const RegisterForm: React.FC = () => {
     try {
       await registerUser({ username, email, password });
       setSuccessMessage('Registration successful! You can now sign in.');
-    } catch (err: any) {
+    } catch (err:any) {
       setError(err.message || 'An unknown error occurred during registration.');
     } finally {
       setIsLoading(false);
@@ -36,7 +36,7 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-2xl ring-1 ring-gray-200">
+    <div className="w-full max-w-md rounded-xl text-black bg-white p-8 shadow-2xl ring-1 ring-gray-200">
       <h1 className="mb-6 text-center text-3xl font-bold text-gray-800">
         Create an Account
       </h1>

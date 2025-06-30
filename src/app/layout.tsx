@@ -14,6 +14,13 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'CogniFlow AI Chat',
   description: 'A modern, context-aware AI chat application.',
+  icons:[
+    {
+      rel:'icon',
+      url:'/logo.svg',
+      type:'image/svg+xml'
+    }
+  ]
 };
 
 export default function RootLayout({
