@@ -1,6 +1,14 @@
 @import "tailwindcss";
+@theme {
+  --color-brand-light: #DAD7CD;
+  --color-brand-sage: #A3B18A;
+  --color-brand-green: #588157;
+  --color-brand-dark: #3A5A40;
+  --color-brand-deep: #344E41;
+}
+
 @layer base {
   body {
-    @apply bg-[#111111] text-gray-300;
+    @apply bg-brand-light text-brand-deep;
   }
 }

@@ -10,9 +10,9 @@
 // Enums
 //================================
 export enum Role {
-  User = 'user',
-  Model = 'model',
-  Assistant = 'assistant',
+  User = "user",
+  Model = "model",
+  Assistant = "assistant",
 }
 
 //================================
@@ -42,13 +42,12 @@ export interface Token {
 
 // For making login requests
 export interface LoginRequest {
-    username: string;
-    password: string;
+  username: string;
+  password: string;
 }
 
 // For making register requests
 export interface RegisterRequest extends UserCreate {}
-
 
 //================================
 // Chat Schemas
@@ -60,8 +59,8 @@ export interface RegisterRequest extends UserCreate {}
  * The backend only expects `role` and `content` for past messages.
  */
 export interface ApiChatMessage {
-    role: Role | string;
-    content: string;
+  role: Role | string;
+  content: string;
 }
 
 /**
@@ -92,7 +91,6 @@ export interface ChatResponse {
   message_id: string;
 }
 
-
 //================================
 // Document & Collection Schemas
 // (from document.py)
@@ -109,8 +107,8 @@ export interface BackendDocument {
 
 // Matches the DocumentCollectionCreate model in document.py
 export interface DocumentCollectionCreate {
-    name: string;
-    metadata?: ArbitraryMetadata;
+  name: string;
+  metadata?: ArbitraryMetadata;
 }
 
 // Matches the DocumentQueryResult model in document.py and chat.py
@@ -124,15 +122,15 @@ export interface DocumentQueryResult {
 
 // Matches the DocumentsAddedResponse model in document.py
 export interface DocumentsAddedResponse {
-    collection_name: string;
-    added_count: number;
-    ids: string[];
+  collection_name: string;
+  added_count: number;
+  ids: string[];
 }
 
 // Matches the DocumentQuery model in document.py
 export interface DocumentQuery {
-    query_text: string;
-    top_k?: number;
+  query_text: string;
+  top_k?: number;
 }
 
 //================================
@@ -154,19 +152,21 @@ export interface Persona {
 export type DynamicContext = Record<string, unknown>;
 
 export interface ContextResponse {
-    user_id: string;
-    context_data: DynamicContext;
-    updated_at: string;
+  user_id: string;
+  context_data: DynamicContext;
+  updated_at: string;
 }
 
 export interface PersonaCreate {
   name: string;
-  description: string;
-  system_prompt: string;
+  description?: string;
+  traits: string[];
+  goals: string[];
 }
 
 export interface PersonaUpdate {
   name?: string;
   description?: string;
-  system_prompt?: string;
+  traits?: string[];
+  goals?: string[];
 }
