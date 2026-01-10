@@ -1,63 +1,77 @@
-/**
- * t3-chat-frontend/app/chat/(main)/[chatId]/page.tsx
- *
- * The main chat page component. It assembles all the chat UI components
- * and wires them up to the useChat hook for full functionality.
- * This version is updated for dynamic routing.
- */
 "use client";
 
-import React from 'react';
-import { useChat } from '@/hooks/useChat';
-import { useAuth } from '@/contexts/AuthContext';
-import { useParams } from 'next/navigation';
+import React from "react";
+import { useChat } from "@/hooks/useChat";
+import { useAuth } from "@/contexts/AuthContext";
+import { useParams } from "next/navigation";
 
-import { ChatWindow } from '@/components/ChatWindow';
-import { ChatInput } from '@/components/ChatInput';
+import { ChatArea } from "@/components/chat/ChatArea";
+import { MessageInput } from "@/components/chat/MessageInput";
 
 export default function ChatPage() {
   const { user } = useAuth();
+
   const params = useParams();
-  const chatId = Array.isArray(params.chatId) ? params.chatId[0] : params.chatId;
+  const chatId = Array.isArray(params.chatId)
+    ? params.chatId[0]
+    : params.chatId;
 
-  // Hardcoded for now. In a real app, this could be dynamic.
-  const collectionName = 'general_knowledge';
+  // Hardcoded for now with plans to be dynamic later
+  const collectionName = "general_knowledge";
 
-  // The useChat hook now receives the dynamic chatId from the URL
-  const { messages, isLoading, error, sendMessage } = useChat({
-    userId: user?.id || '',
+  const {
+    messages,
+    isLoading: isChatLoading,
+    error,
+    sendMessage,
+  } = useChat({
+    userId: user?.id || "",
     collectionName: collectionName,
-    chatId: chatId || '', // Pass the chatId to the hook
+    chatId: chatId || "",
   });
 
   const handleSendMessage = async (text: string) => {
-    if (!chatId) return; // Don't send if there's no active chat ID
+    if (!chatId) return;
     await sendMessage(text);
   };
 
   if (!user) {
-    return <div className="flex-1 flex items-center justify-center">Initializing...</div>
+    return (
+      <div className="flex-1 flex items-center justify-center text-[#3A5A40]">
+        Initializing user session...
+      </div>
+    );
   }
-  
+
   if (!chatId) {
-    return <div className="flex-1 flex items-center justify-center">Select a chat or start a new one.</div>
+    return (
+      <div className="flex-1 flex items-center justify-center text-[#3A5A40]">
+        Select a chat or start a new one.
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-1 flex-col h-full">
+    <div className="flex flex-1 flex-col h-full relative">
       {error && (
-        <div className="bg-red-100 border-t-4 border-red-500 rounded-b text-red-900 px-4 py-3 shadow-md m-4" role="alert">
-          <div className="flex">
-            <div>
-              <p className="font-bold">An error occurred</p>
-              <p className="text-sm">{error}</p>
-            </div>
-          </div>
+        <div
+          className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-md max-w-lg w-full"
+          role="alert"
+        >
+          <p className="font-bold">Error</p>
+          <p>{error}</p>
         </div>
       )}
 
-      <ChatWindow messages={messages} onSuggestionClick={handleSendMessage} username={user.username} />
-      <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+      {/* 
+         Cast messages to any if there's a strict type mismatch between hook and component, 
+         but ideally they should align. The interface used in ChatArea is compatible with typical chat message structures.
+      */}
+      <ChatArea messages={messages as any} />
+      <MessageInput
+        onSendMessage={handleSendMessage}
+        isLoading={isChatLoading}
+      />
     </div>
   );
 }

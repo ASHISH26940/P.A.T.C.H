@@ -7,11 +7,8 @@ import axios from "axios";
 import { ChatRequest, ChatResponse } from "@/types/api";
 import { getAuthToken } from "./auth"; // Utility to get the JWT from localStorage
 
-// Create an Axios instance. We can reuse the one from auth.ts if we configure
-// it globally, but creating it here is also fine for modularity.
-const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL ?? "",
-});
+// Direct connection to backend API - bypassing Next.js proxy to preserve Authorization headers
+const BASE_URL = "http://127.0.0.1:5000";
 
 /**
  * Handles Axios API errors, extracting a meaningful error message.
@@ -43,18 +40,38 @@ export async function sendChatMessage(
 
   // Crucially, check if the user is authenticated before making the call.
   if (!token) {
+    console.error("Chat API: No token found in localStorage.");
     // In a real app, this might trigger a redirect to the login page.
     throw new Error("Authentication token not found. Please log in.");
   }
 
+  console.log("Chat API: Preparing to send request.");
+  console.log("Chat API: Token found:", !!token);
+  console.log("Chat API: Token snippet:", token.substring(0, 10) + "...");
+  console.log("Chat API: Target URL:", `${BASE_URL}/v1/chat/`);
+
+  // DIAGNOSTIC: Test if the token works for the known-good auth endpoint
   try {
-    const response = await apiClient.post<ChatResponse>("/v1/chat", request, {
-      headers: {
-        "Content-Type": "application/json",
-        // Include the JWT in the Authorization header as a Bearer token
-        Authorization: `Bearer ${token}`,
-      },
+    await axios.get(`${BASE_URL}/v1/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
+    console.log("Chat API: Diagnostic /v1/auth/me check PASSED.");
+  } catch (e) {
+    console.error("Chat API: Diagnostic /v1/auth/me check FAILED.", e);
+  }
+
+  try {
+    // Add trailing slash to avoid potential redirects that might strip headers
+    const response = await axios.post<ChatResponse>(
+      `${BASE_URL}/v1/chat/`,
+      request,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     handleApiError(error);

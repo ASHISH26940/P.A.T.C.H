@@ -13,18 +13,25 @@ const config: Config = {
         brand: {
           light: "#DAD7CD",
           sage: "#A3B18A",
-          green: "#588157",
+          green: "#588157", // Primary brand green
           fern: "#588157",
           hunter: "#3A5A40",
           deep: "#344E41",
-          dark: "#344E41", // Mapping dark to deep for now
+          dark: "#344E41",
         },
-        // Direct map from user snippet
-        bone: "#DAD7CD",
+        // Direct map from new UI design
+        primary: "#588157", // Green - Brand Primary
+        "background-light": "#DAD7CD", // Light Beige - Main Background
+        "background-dark": "#344E41", // Deep Green - Dark Mode Background
         sage: "#A3B18A",
-        fern: "#588157",
-        hunter: "#3A5A40",
-        deep: "#344E41",
+        "green-mid": "#588157",
+        "dark-green": "#3A5A40",
+        "deep-green": "#344E41",
+      },
+      boxShadow: {
+        soft: "0 4px 20px -2px rgba(58, 90, 64, 0.1)",
+        glass: "0 8px 32px 0 rgba(31, 38, 135, 0.05)",
+        "glass-dark": "0 8px 32px 0 rgba(0, 0, 0, 0.3)",
       },
       animation: {
         blob: "blob 7s infinite",
