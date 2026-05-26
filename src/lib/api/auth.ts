@@ -1,16 +1,27 @@
 import axios from "axios";
 import { RegisterRequest, LoginRequest, Token, User } from "@/types/api";
 
-const BASE_URL = "http://127.0.0.1:5000";
-const DEV_MODE = true;
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
+const DEV_MODE = false;
 
 export const TOKEN_STORAGE_KEY = "jwt_token";
+
+function extractErrorDetail(data: unknown): string {
+  if (!data) return "An unknown error occurred";
+  if (typeof data === "string") return data;
+  const detail = (data as any).detail;
+  if (!detail) return JSON.stringify(data);
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((d: any) => d.msg || JSON.stringify(d)).join("; ");
+  }
+  return JSON.stringify(detail);
+}
 
 function handleApiError(error: unknown): never {
   if (axios.isAxiosError(error)) {
     const serverError = error.response?.data;
-    const errorMessage =
-      serverError?.detail || error.message || "An unknown API error occurred";
+    const errorMessage = extractErrorDetail(serverError) || error.message || "An unknown API error occurred";
     console.error("Backend API Error:", errorMessage, serverError);
     throw new Error(errorMessage);
   }
@@ -20,7 +31,9 @@ function handleApiError(error: unknown): never {
 
 export async function registerUser(request: RegisterRequest): Promise<User> {
   if (DEV_MODE) {
-    return { id: 1, username: request.username, email: request.email || "dev@patch.local" };
+    await new Promise((r) => setTimeout(r, 600));
+    if (request.username.length < 3) throw new Error("Username must be at least 3 characters");
+    return { id: Date.now(), username: request.username, email: request.email || "dev@patch.local" };
   }
   try {
     const response = await axios.post<User>(
@@ -35,6 +48,8 @@ export async function registerUser(request: RegisterRequest): Promise<User> {
 
 export async function loginUser(request: LoginRequest): Promise<User> {
   if (DEV_MODE) {
+    await new Promise((r) => setTimeout(r, 500));
+    if (!request.username || !request.password) throw new Error("Username and password required");
     const user: User = { id: 1, username: request.username, email: "dev@patch.local" };
     if (typeof window !== "undefined") {
       localStorage.setItem(TOKEN_STORAGE_KEY, "dev_token");
@@ -97,6 +112,7 @@ export async function getCurrentUser(): Promise<User> {
 export function logoutUser(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem("dev_user");
   }
 }
 

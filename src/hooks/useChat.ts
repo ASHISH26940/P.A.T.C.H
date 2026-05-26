@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { sendChatMessage } from "@/lib/api/chat";
 import { addConversation } from "@/lib/localstore";
+import type { DocumentQueryResult } from "@/types/api";
 
 interface UseChatOptions {
   userId: number | string;
@@ -8,12 +9,22 @@ interface UseChatOptions {
   chatId: string;
 }
 
+interface SourceDoc {
+  id?: string;
+  content?: string;
+  metadata?: Record<string, unknown>;
+  distance?: number;
+}
+
 interface ChatMessage {
   id?: string;
   role: "user" | "model";
   content: string;
   timestamp: string;
+  sourceDocuments?: SourceDoc[];
 }
+
+const SOURCE_EVENT = "patch-source-docs";
 
 export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -57,9 +68,18 @@ export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
           role: "model",
           content: response.ai_response,
           timestamp: new Date().toISOString(),
+          sourceDocuments: response.source_documents,
         };
         messagesRef.current = [...messagesRef.current, aiMsg];
         setMessages((prev) => [...prev, aiMsg]);
+
+        if (response.source_documents && response.source_documents.length > 0) {
+          window.dispatchEvent(
+            new CustomEvent(SOURCE_EVENT, {
+              detail: { sourceDocuments: response.source_documents, chatId },
+            })
+          );
+        }
       } catch (err: any) {
         setError(err.message || "Failed to get a response.");
       } finally {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -39,21 +39,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
     : params.chatId;
   const [conversations, setConversations] = useState<StoredConversation[]>([]);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     setConversations(getConversations());
   }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
   useEffect(() => {
-    const handler = () => setConversations(getConversations());
+    const handler = () => refresh();
     window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
+    window.addEventListener("patch-conv-change", handler);
+    window.addEventListener("focus", handler);
+    window.addEventListener("popstate", handler);
+    return () => {
+      window.removeEventListener("storage", handler);
+      window.removeEventListener("patch-conv-change", handler);
+      window.removeEventListener("focus", handler);
+      window.removeEventListener("popstate", handler);
+    };
+  }, [refresh]);
 
   const handleNewChat = () => router.push(`/chat/${crypto.randomUUID()}`);
   const handleDelete = (e: React.MouseEvent, chatId: string) => {
     e.preventDefault();
     e.stopPropagation();
     removeConversation(chatId);
-    setConversations(getConversations());
     if (activeChatId === chatId) handleNewChat();
   };
 
@@ -63,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <h2 className="font-h3 text-primary-container font-bold">Conversations</h2>
         <button
           onClick={handleNewChat}
-          className="w-full py-3 bg-primary-container text-surface-dim font-bold rounded flex items-center justify-center gap-2 hover:brightness-110 transition-all"
+          className="w-full py-3 bg-primary-container text-surface-dim font-bold rounded flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all"
         >
           <span className="material-symbols-outlined text-[20px]">add</span>
           New Memory
@@ -81,10 +91,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               key={chat.id}
               href={`/chat/${chat.id}`}
               className={clsx(
-                "p-4 rounded cursor-pointer transition-colors group",
+                "p-4 rounded cursor-pointer transition-all duration-200 group relative",
                 chat.id === activeChatId
                   ? "bg-surface-container-low border border-glass-border"
-                  : "hover:bg-glass-fill",
+                  : "hover:bg-glass-fill hover:pl-5",
               )}
             >
               <div className="flex justify-between items-start mb-2">
@@ -105,6 +115,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <p className="text-[13px] text-on-surface-variant line-clamp-1">
                 {chat.preview || chat.title || "Conversation"}
               </p>
+              <button
+                onClick={(e) => handleDelete(e, chat.id)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-error-container/20 transition-all"
+              >
+                <span className="material-symbols-outlined text-[16px] text-on-surface-variant hover:text-error">delete</span>
+              </button>
             </Link>
           ))
         )}

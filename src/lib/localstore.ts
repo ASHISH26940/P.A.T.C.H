@@ -12,11 +12,20 @@ export function getConversations(): StoredConversation[] {
   return JSON.parse(localStorage.getItem(CONV_KEY) || "[]");
 }
 
+const CONV_EVENT = "patch-conv-change";
+
+function notify() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(CONV_EVENT));
+  }
+}
+
 export function addConversation(id: string, title: string, preview?: string) {
   const list = getConversations();
   if (!list.find((c) => c.id === id)) {
     list.unshift({ id, title, preview, timestamp: new Date().toISOString() });
     localStorage.setItem(CONV_KEY, JSON.stringify(list));
+    notify();
   }
 }
 
@@ -25,6 +34,7 @@ export function removeConversation(id: string) {
     CONV_KEY,
     JSON.stringify(getConversations().filter((c) => c.id !== id)),
   );
+  notify();
 }
 
 export function updateConversationTitle(id: string, title: string) {
@@ -32,4 +42,5 @@ export function updateConversationTitle(id: string, title: string) {
     c.id === id ? { ...c, title } : c,
   );
   localStorage.setItem(CONV_KEY, JSON.stringify(list));
+  notify();
 }

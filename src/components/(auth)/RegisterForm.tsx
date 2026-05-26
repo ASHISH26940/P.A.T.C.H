@@ -17,7 +17,7 @@ export const RegisterForm: React.FC = () => {
     setSuccess(null);
     setIsLoading(true);
     try {
-      await registerUser({ username, email, password });
+      await registerUser({ username, ...(email ? { email } : {}), password });
       setSuccess("Account created! You can now sign in.");
     } catch (err: any) {
       setError(err.message || "Registration failed.");

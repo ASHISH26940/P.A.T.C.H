@@ -9,9 +9,9 @@ import axios from "axios";
 import { getAuthToken } from "./auth";
 import { ContextResponse, DynamicContext } from "@/types/api";
 
-const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
 const apiClient = axios.create({
-  baseURL: baseURL,
+  baseURL: BASE_URL,
 });
 
 // Use an interceptor to automatically add the Authorization header
@@ -23,11 +23,22 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+function extractErrorDetail(data: unknown): string {
+  if (!data) return "An unknown error occurred";
+  if (typeof data === "string") return data;
+  const detail = (data as any).detail;
+  if (!detail) return JSON.stringify(data);
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((d: any) => d.msg || JSON.stringify(d)).join("; ");
+  }
+  return JSON.stringify(detail);
+}
+
 function handleApiError(error: unknown): never {
   if (axios.isAxiosError(error)) {
     const serverError = error.response?.data;
-    const errorMessage =
-      serverError?.detail || error.message || "An unknown API error occurred";
+    const errorMessage = extractErrorDetail(serverError) || error.message || "An unknown API error occurred";
     console.error("Context API Error:", errorMessage, serverError);
     throw new Error(errorMessage);
   }

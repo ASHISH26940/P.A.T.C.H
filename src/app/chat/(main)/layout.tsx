@@ -7,6 +7,9 @@ import { ActiveMemories } from "@/components/layout/ActiveMemories";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { IconRail } from "@/components/layout/IconRail";
 import { BreadcrumbStepper } from "@/components/layout/BreadcrumbStepper";
+import clsx from "clsx";
+
+const STEP_ROUTES = ["/settings", "/memory", "/chat", "/graph"];
 
 const ChatLayoutComponent: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -56,8 +59,36 @@ const ChatLayoutComponent: React.FC<{ children: React.ReactNode }> = ({
             status: "pending",
           },
         ]}
+        onStepClick={(index) => {
+          const route = STEP_ROUTES[index];
+          if (route) router.push(route);
+        }}
         leading={
-          <span className="material-symbols-outlined text-[24px] text-on-surface">close</span>
+          <button
+            onClick={() => setShowMemories((s) => !s)}
+            className="flex flex-col items-center justify-center w-full h-full gap-1 group"
+            aria-label="Toggle memories panel"
+          >
+            <span
+              className={clsx(
+                "material-symbols-outlined text-[24px] transition-colors",
+                showMemories
+                  ? "text-primary-container"
+                  : "text-on-surface-variant group-hover:text-on-surface"
+              )}
+              style={showMemories ? { fontVariationSettings: "'FILL' 1" } : undefined}
+            >
+              bolt
+            </span>
+            <span
+              className={clsx(
+                "text-[9px] uppercase tracking-widest font-mono-code transition-colors",
+                showMemories ? "text-primary-container" : "text-on-surface-variant"
+              )}
+            >
+              Memory
+            </span>
+          </button>
         }
       />
       <div className="flex-1 flex overflow-hidden">
