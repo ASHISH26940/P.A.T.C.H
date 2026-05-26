@@ -1,24 +1,105 @@
-/**
- * t3-chat-frontend/app/(auth)/login/page.tsx
- *
- * The page component for displaying the login form.
- */
-import { LoginForm } from "@/components/(auth)/LoginForm";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Sign In",
-};
+import { LoginForm } from "@/components/(auth)/LoginForm";
+import { useEffect, useRef } from "react";
 
 export default function LoginPage() {
-  return (
-    <main className="flex min-h-screen w-full items-center justify-center relative overflow-hidden bg-brand-light transition-colors duration-300">
-      <div className="absolute top-[-10%] left-[-5%] w-96 h-96 bg-brand-sage/30 rounded-full blur-3xl mix-blend-multiply filter opacity-70 animate-blob"></div>
-      <div className="absolute top-[10%] right-[-5%] w-96 h-96 bg-brand-green/30 rounded-full blur-3xl mix-blend-multiply filter opacity-70 animate-blob animation-delay-2000"></div>
-      <div className="absolute bottom-[-10%] left-[20%] w-96 h-96 bg-brand-deep/20 rounded-full blur-3xl mix-blend-multiply filter opacity-70 animate-blob animation-delay-4000"></div>
+  const meshRef = useRef<HTMLDivElement>(null);
 
-      <div className="relative z-10 w-full max-w-md p-4">
-        <LoginForm />
+  useEffect(() => {
+    const handleMouse = (e: MouseEvent) => {
+      if (!meshRef.current) return;
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      meshRef.current.style.background = `
+        radial-gradient(at ${x * 100}% ${y * 100}%, rgba(57, 57, 61, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(31, 31, 35, 0.2) 0px, transparent 50%)
+      `;
+    };
+    window.addEventListener("mousemove", handleMouse);
+    return () => window.removeEventListener("mousemove", handleMouse);
+  }, []);
+
+  return (
+    <main className="font-body-md text-body-md h-screen w-full flex overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+      <div
+        ref={meshRef}
+        className="fixed inset-0 z-0 gradient-mesh pointer-events-none"
+      ></div>
+
+      <div className="relative z-10 w-full h-full flex flex-col md:flex-row">
+        {/* Left Section: 40% - Desktop only */}
+        <section className="hidden md:flex md:w-[40%] h-full flex-col justify-center pl-16 pr-8 border-r border-glass-border bg-surface-container-lowest/50 relative overflow-hidden">
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-surface-bright/10 rounded-full blur-[100px]"></div>
+
+          <div className="relative z-20 space-y-3">
+            <div className="flex items-center gap-3">
+              <span
+                className="material-symbols-outlined text-primary-container text-5xl"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                hub
+              </span>
+              <h1 className="font-h1 text-[2.5rem] text-[#f5f5f4] tracking-tighter uppercase-mono">
+                P.A.T.C.H.
+              </h1>
+            </div>
+            <div>
+              <p className="text-[1.6rem] font-bold leading-snug text-[#f5f5f4] mb-3">
+                Your memory layer for{" "}
+                <span className="text-primary-container">creating</span>
+                <span className="terminal-cursor"></span>
+              </p>
+              <p className="text-[#a8a29e] text-base leading-relaxed">
+                High-fidelity cognitive infrastructure for nocturnal creators
+                and deep-work cycles.
+              </p>
+            </div>
+          </div>
+
+          <div className="absolute bottom-12 left-12 opacity-5 pointer-events-none">
+            <div className="grid grid-cols-4 gap-2">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div
+                  key={i}
+                  className={`w-8 h-8 ${i === 1 || i === 7 ? "bg-primary-container" : "border border-primary-container"}`}
+                ></div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Right Section: 60% */}
+        <section className="flex-1 h-full flex items-center justify-center p-stack-lg md:p-0 relative">
+          <div className="absolute top-8 left-8 md:hidden flex items-center gap-2">
+            <span
+              className="material-symbols-outlined text-primary-container"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              hub
+            </span>
+            <span className="font-h3 text-h3 text-primary-container tracking-tighter">
+              P.A.T.C.H.
+            </span>
+          </div>
+
+          <LoginForm />
+
+          <div className="absolute bottom-8 right-8 flex gap-stack-md">
+            <a
+              className="text-xs text-[#a8a29e]/50 hover:text-[#f59e0b] transition-colors"
+              href="#"
+            >
+              v2.4.0-stable
+            </a>
+            <a
+              className="text-xs text-[#a8a29e]/50 hover:text-[#f59e0b] transition-colors"
+              href="#"
+            >
+              System Status
+            </a>
+          </div>
+        </section>
       </div>
     </main>
   );

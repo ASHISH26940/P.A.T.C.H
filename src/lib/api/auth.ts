@@ -1,16 +1,10 @@
-/**
- * t3-chat-frontend/lib/api/auth.ts (Patched)
- *
- * API client for authentication, updated to match OpenAPI spec.
- * Uses the /v1/auth/login endpoint and adds /v1/auth/me.
- */
 import axios from "axios";
 import { RegisterRequest, LoginRequest, Token, User } from "@/types/api";
 
-// Direct connection to backend API
 const BASE_URL = "http://127.0.0.1:5000";
+const DEV_MODE = true;
 
-const TOKEN_STORAGE_KEY = "jwt_token";
+export const TOKEN_STORAGE_KEY = "jwt_token";
 
 function handleApiError(error: unknown): never {
   if (axios.isAxiosError(error)) {
@@ -25,6 +19,9 @@ function handleApiError(error: unknown): never {
 }
 
 export async function registerUser(request: RegisterRequest): Promise<User> {
+  if (DEV_MODE) {
+    return { id: 1, username: request.username, email: request.email || "dev@patch.local" };
+  }
   try {
     const response = await axios.post<User>(
       `${BASE_URL}/v1/auth/register`,
@@ -36,18 +33,21 @@ export async function registerUser(request: RegisterRequest): Promise<User> {
   }
 }
 
-/**
- * Logs in a user, stores the token, and returns the user's data.
- * @param request - The login credentials.
- * @returns The authenticated user's data.
- */
 export async function loginUser(request: LoginRequest): Promise<User> {
+  if (DEV_MODE) {
+    const user: User = { id: 1, username: request.username, email: "dev@patch.local" };
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TOKEN_STORAGE_KEY, "dev_token");
+      localStorage.setItem("dev_user", JSON.stringify(user));
+    }
+    return user;
+  }
+
   const formData = new URLSearchParams();
   formData.append("username", request.username);
   formData.append("password", request.password);
 
   try {
-    // Step 1: Authenticate and get the token
     const response = await axios.post<Token>(
       `${BASE_URL}/v1/auth/login`,
       formData,
@@ -57,29 +57,28 @@ export async function loginUser(request: LoginRequest): Promise<User> {
     );
     const tokenData = response.data;
 
-    // Step 2: Store the token in localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem(TOKEN_STORAGE_KEY, tokenData.access_token);
     }
 
-    // Step 3: Fetch the current user's data with the new token
     const userData = await getCurrentUser();
     return userData;
   } catch (error) {
-    // Clear token if any part of the process fails
     logoutUser();
     handleApiError(error);
   }
 }
 
-/**
- * Fetches the currently authenticated user's details.
- * @returns The User object.
- */
 export async function getCurrentUser(): Promise<User> {
   const token = getAuthToken();
   if (!token) {
     throw new Error("No authentication token found.");
+  }
+
+  if (DEV_MODE && token === "dev_token") {
+    const stored = localStorage.getItem("dev_user");
+    if (stored) return JSON.parse(stored);
+    throw new Error("Dev user not found.");
   }
 
   try {
@@ -88,7 +87,6 @@ export async function getCurrentUser(): Promise<User> {
     });
     return response.data;
   } catch (error) {
-    // If the token is invalid, log the user out
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       logoutUser();
     }

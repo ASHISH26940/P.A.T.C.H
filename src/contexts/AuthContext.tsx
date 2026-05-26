@@ -1,15 +1,8 @@
-/**
- * t3-chat-frontend/contexts/AuthContext.tsx
- *
- * Provides a global context for the authenticated user's state.
- * It fetches the current user's data on initial load and makes it
- * available to all child components.
- */
 "use client";
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { User } from '@/types/api';
-import { getCurrentUser, logoutUser as apiLogout } from '@/lib/api/auth';
+import { getCurrentUser, logoutUser as apiLogout, TOKEN_STORAGE_KEY } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -27,14 +20,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => {
         const loadUser = async () => {
             try {
-                if (localStorage.getItem('jwt_token')) {
+                if (localStorage.getItem(TOKEN_STORAGE_KEY)) {
                     const userData = await getCurrentUser();
                     setUser(userData);
                 }
             } catch (error: unknown) {
                 console.error('Failed to fetch user, token might be invalid.', error);
                 setUser(null);
-                // Optional: clear the invalid token
                 apiLogout();
             } finally {
                 setIsLoading(false);

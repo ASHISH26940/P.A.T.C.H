@@ -1,18 +1,21 @@
 "use client";
-
-import React, { useState, KeyboardEvent } from "react";
-import { PlusCircle, SendHorizontal } from "lucide-react";
+import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
 
 interface MessageInputProps {
   onSendMessage: (text: string) => Promise<void>;
   isLoading: boolean;
 }
 
-export const MessageInput: React.FC<MessageInputProps> = ({
-  onSendMessage,
-  isLoading,
-}) => {
+export const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isLoading }) => {
   const [inputValue, setInputValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
+    }
+  }, [inputValue]);
 
   const handleSend = () => {
     if (inputValue.trim() && !isLoading) {
@@ -22,42 +25,35 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
   return (
-    <div className="absolute bottom-0 left-0 w-full px-4 pb-6 pt-12 bg-gradient-to-t from-[#DAD7CD] via-[#DAD7CD]/90 to-transparent pointer-events-none z-10 flex justify-center">
-      <div className="w-full max-w-3xl pointer-events-auto relative group">
-        <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[2rem] p-2 pl-4 flex items-end gap-2 shadow-glass ring-1 ring-white/40 transition-all duration-300 focus-within:ring-[#588157]/50">
-          <button className="mb-1.5 p-2 rounded-full text-[#3A5A40]/50 hover:bg-[#3A5A40]/10 transition-colors">
-            <PlusCircle className="w-6 h-6" />
+    <div className="p-8 pb-10 bg-surface">
+      <div className="max-w-4xl mx-auto relative group">
+        <textarea
+          ref={textareaRef}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isLoading}
+          className="w-full bg-surface-container-low border border-glass-border focus:border-primary-container focus:ring-0 rounded-lg px-6 py-5 pr-24 text-on-surface placeholder:text-on-surface-variant resize-none transition-all duration-300 min-h-[64px] text-[14px] outline-none"
+          placeholder="Ask P.A.T.C.H. anything..."
+          rows={1}
+        />
+        <div className="absolute right-3 bottom-2.5 flex items-center gap-3">
+          <button className="text-on-surface-variant hover:text-primary-container transition-colors" type="button">
+            <span className="material-symbols-outlined text-[24px]">attach_file</span>
           </button>
-          <textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading}
-            className="w-full bg-transparent border-none focus:ring-0 text-[#3A5A40] placeholder-[#3A5A40]/40 py-4 px-2 resize-none max-h-32 leading-relaxed focus:outline-none"
-            placeholder={
-              isLoading ? "P.A.T.C.H is thinking..." : "Message P.A.T.C.H..."
-            }
-            rows={1}
-            style={{ minHeight: "56px" }}
-          />
           <button
             onClick={handleSend}
             disabled={isLoading || !inputValue.trim()}
-            className="mb-1 p-3 rounded-full bg-[#588157] text-white hover:bg-[#3A5A40] hover:shadow-lg transition-all active:scale-95 flex items-center justify-center aspect-square disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-10 h-10 bg-primary-container text-surface-dim rounded hover:brightness-110 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
           >
-            <SendHorizontal className="w-5 h-5 ml-0.5" />
+            <span className="material-symbols-outlined text-[24px]">arrow_upward</span>
           </button>
         </div>
-        <p className="text-center text-[11px] mt-3 opacity-40 font-medium tracking-wide text-[#344E41]">
-          P.A.T.C.H may produce inaccurate information.
-        </p>
       </div>
     </div>
   );

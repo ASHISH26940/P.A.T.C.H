@@ -1,63 +1,106 @@
-/**
- * t3-chat-frontend/app/(auth)/register/page.tsx
- *
- * The page component for displaying the registration form with a new split layout.
- */
-import { RegisterForm } from "@/components/(auth)/RegisterForm";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Sign Up - P.A.T.C.H",
-};
+import { RegisterForm } from "@/components/(auth)/RegisterForm";
+import { useEffect, useRef } from "react";
 
 export default function RegisterPage() {
+  const meshRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMouse = (e: MouseEvent) => {
+      if (!meshRef.current) return;
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      meshRef.current.style.background = `
+        radial-gradient(at ${x * 100}% ${y * 100}%, rgba(57, 57, 61, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(31, 31, 35, 0.2) 0px, transparent 50%)
+      `;
+    };
+    window.addEventListener("mousemove", handleMouse);
+    return () => window.removeEventListener("mousemove", handleMouse);
+  }, []);
+
   return (
-    <main className="bg-brand-light min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-brand-sage/40 rounded-full mix-blend-multiply filter blur-[80px] opacity-70 animate-float"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[30rem] h-[30rem] bg-brand-fern/40 rounded-full mix-blend-multiply filter blur-[80px] opacity-70 animate-float-delayed"></div>
-      <div className="absolute top-[20%] right-[10%] w-64 h-64 bg-white/40 rounded-full mix-blend-overlay filter blur-[60px] opacity-50"></div>
+    <main className="font-body-md text-body-md h-screen w-full flex overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+      <div
+        ref={meshRef}
+        className="fixed inset-0 z-0 gradient-mesh pointer-events-none"
+      ></div>
 
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 z-10 items-center">
-        {/* Left Content */}
-        <div className="hidden lg:flex flex-col justify-center space-y-6 pr-8">
-          <div className="inline-flex items-center space-x-3">
-            <div className="w-12 h-12 bg-brand-deep rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
-              <span className="text-brand-light text-2xl font-bold">P</span>
-              {/* Placeholder for icon if font icon unavailable */}
-            </div>
-            <h1 className="text-4xl font-bold tracking-tight text-brand-deep font-mono">
-              P.A.T.C.H
-            </h1>
-          </div>
-          <div className="space-y-4">
-            <h2 className="text-3xl font-light text-brand-hunter leading-tight">
-              Experience{" "}
-              <span className="font-semibold italic">Serene Intelligence.</span>
-            </h2>
-            <p className="text-lg text-brand-fern max-w-md">
-              Join a new era of AI companionship designed for clarity, calmness,
-              and capability.
-            </p>
-          </div>
-          <div className="flex items-center space-x-4 pt-4">
-            <div className="flex -space-x-3">
-              {/* Using placeholders or same images if available. Using simple colored divs as fallback if external images block. */}
-              <div className="w-10 h-10 rounded-full border-2 border-brand-light bg-gray-300"></div>
-              <div className="w-10 h-10 rounded-full border-2 border-brand-light bg-gray-400"></div>
-              <div className="w-10 h-10 rounded-full border-2 border-brand-light bg-gray-500"></div>
-            </div>
-            <p className="text-sm font-medium text-brand-hunter">
-              Joined by 10k+ thinkers
-            </p>
-          </div>
-        </div>
+      <div className="relative z-10 w-full h-full flex flex-col md:flex-row">
+        {/* Left Section: 40% - Desktop only */}
+        <section className="hidden md:flex md:w-[40%] h-full flex-col justify-center pl-16 pr-8 border-r border-glass-border bg-surface-container-lowest/50 relative overflow-hidden">
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-surface-bright/10 rounded-full blur-[100px]"></div>
 
-        {/* Right Form Card */}
-        <RegisterForm />
+          <div className="relative z-20 space-y-3">
+            <div className="flex items-center gap-3">
+              <span
+                className="material-symbols-outlined text-primary-container text-5xl"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                hub
+              </span>
+              <h1 className="font-h1 text-[2.5rem] text-[#f5f5f4] tracking-tighter uppercase-mono">
+                P.A.T.C.H.
+              </h1>
+            </div>
+            <div>
+              <p className="text-[1.6rem] font-bold leading-snug text-[#f5f5f4] mb-3">
+                Your memory layer for{" "}
+                <span className="text-primary-container">creating</span>
+                <span className="terminal-cursor"></span>
+              </p>
+              <p className="text-[#a8a29e] text-base leading-relaxed">
+                High-fidelity cognitive infrastructure for nocturnal creators
+                and deep-work cycles.
+              </p>
+            </div>
+          </div>
+
+          <div className="absolute bottom-12 left-12 opacity-5 pointer-events-none">
+            <div className="grid grid-cols-4 gap-2">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div
+                  key={i}
+                  className={`w-8 h-8 ${i === 1 || i === 7 ? "bg-primary-container" : "border border-primary-container"}`}
+                ></div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Right Section: 60% */}
+        <section className="flex-1 h-full flex items-center justify-center p-stack-lg md:p-0 relative">
+          <div className="absolute top-8 left-8 md:hidden flex items-center gap-2">
+            <span
+              className="material-symbols-outlined text-primary-container"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              hub
+            </span>
+            <span className="font-h3 text-h3 text-primary-container tracking-tighter">
+              P.A.T.C.H.
+            </span>
+          </div>
+
+          <RegisterForm />
+
+          <div className="absolute bottom-8 right-8 flex gap-stack-md">
+            <a
+              className="text-xs text-[#a8a29e]/50 hover:text-[#f59e0b] transition-colors"
+              href="#"
+            >
+              v2.4.0-stable
+            </a>
+            <a
+              className="text-xs text-[#a8a29e]/50 hover:text-[#f59e0b] transition-colors"
+              href="#"
+            >
+              System Status
+            </a>
+          </div>
+        </section>
       </div>
-
-      {/* Theme Toggle Button (Light mode only requested, but keeping simpler clean toggle or removing if 'no dark mode' means completely disabled) */}
-      {/* User specifically said "no dark mode dark classes", implying a light-only design. I will omit the dark mode toggle for this page or keep it hidden. */}
     </main>
   );
 }
