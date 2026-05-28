@@ -149,15 +149,3 @@ P.A.T.C.H fills a gap no existing product owns:
 
 Cross-session memory is table stakes (ChatGPT, Claude, Mem0, etc.). The differentiator is **vertical: memory for video creators.**
 
----
-
-## License
-
-<<<<<<< HEAD
-MIT
-=======
-For any questions or inquiries, please reach out to:
-Ashish Gupta - gupta.ashish2694@gmail.com
-
------
->>>>>>> 9f6492a59459b383a19af991c189c4885db7244f
