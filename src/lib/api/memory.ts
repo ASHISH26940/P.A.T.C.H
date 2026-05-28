@@ -40,6 +40,11 @@ export async function getMemory(id: string): Promise<MemoryItem> {
   return res.data;
 }
 
+export async function updateMemory(id: string, data: { content?: string; memory_type?: string; importance?: number }): Promise<MemoryItem> {
+  const res = await axios.put(memoryUrl(`/memories/${id}`), data, authHeaders());
+  return res.data;
+}
+
 export async function deleteMemory(id: string): Promise<void> {
   await axios.delete(memoryUrl(`/memories/${id}`), authHeaders());
 }
@@ -51,6 +56,11 @@ export interface MemoryLink {
 
 export async function createLink(sourceId: string, targetId: string, relationship = "related_to"): Promise<MemoryLink> {
   const res = await axios.post(memoryUrl("/links"), { source_memory_id: sourceId, target_memory_id: targetId, relationship }, authHeaders());
+  return res.data;
+}
+
+export async function getAllLinks(): Promise<{ links: MemoryLink[] }> {
+  const res = await axios.get(memoryUrl("/links"), authHeaders());
   return res.data;
 }
 

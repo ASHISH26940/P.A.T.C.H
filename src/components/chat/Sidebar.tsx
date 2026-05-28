@@ -7,6 +7,8 @@ import {
   removeConversation,
   StoredConversation,
 } from "@/lib/localstore";
+import { getAllPersonas } from "@/lib/api/persona";
+import type { Persona } from "@/types/api";
 import clsx from "clsx";
 
 interface SidebarProps {
@@ -38,10 +40,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     ? params.chatId[0]
     : params.chatId;
   const [conversations, setConversations] = useState<StoredConversation[]>([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [personaOpen, setPersonaOpen] = useState(false);
+  const personaRef = useRef<HTMLDivElement>(null);
+
+  const personaKey = activeChatId ? `patch_persona_${activeChatId}` : "patch_active_persona";
+  const activePersonaId = typeof window !== "undefined" ? localStorage.getItem(personaKey) : null;
+  const activePersona = personas.find((p) => p.id === activePersonaId) || null;
 
   const refresh = useCallback(() => {
-    setConversations(getConversations());
-  }, []);
+    setConversations(getConversations(userId));
+  }, [userId]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -59,11 +68,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
     };
   }, [refresh]);
 
+  useEffect(() => {
+    getAllPersonas().then(setPersonas).catch(() => setPersonas([]));
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (personaRef.current && !personaRef.current.contains(e.target as Node)) setPersonaOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const setActivePersona = (id: string | null, name: string | null) => {
+    const key = activeChatId ? `patch_persona_${activeChatId}` : "patch_active_persona";
+    if (id) {
+      localStorage.setItem(key, id);
+      if (name) localStorage.setItem(`patch_persona_name_${id}`, name);
+    } else {
+      localStorage.removeItem(key);
+    }
+    setPersonaOpen(false);
+    setPersonas((prev) => [...prev]);
+  };
+
   const handleNewChat = () => router.push(`/chat/${crypto.randomUUID()}`);
   const handleDelete = (e: React.MouseEvent, chatId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    removeConversation(chatId);
+    removeConversation(userId, chatId);
     if (activeChatId === chatId) handleNewChat();
   };
 
@@ -78,6 +111,53 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span className="material-symbols-outlined text-[20px]">add</span>
           New Memory
         </button>
+
+        {/* Persona selector */}
+        <div className="relative" ref={personaRef}>
+          <button
+            onClick={() => setPersonaOpen(!personaOpen)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 bg-surface-low border border-glass-border rounded-lg text-left hover:bg-surface-mid transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px] text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Persona</p>
+              <p className="text-sm text-on-surface truncate">{activePersona ? activePersona.name : "None"}</p>
+            </div>
+            <span className={`material-symbols-outlined text-[16px] text-on-surface-variant transition-transform ${personaOpen ? "rotate-180" : ""}`}>expand_more</span>
+          </button>
+
+          {personaOpen && (
+            <div className="absolute bottom-full mb-2 left-0 right-0 bg-surface border border-glass-border rounded-xl shadow-2xl py-2 z-50 max-h-64 overflow-y-auto">
+              <button
+                onClick={() => setActivePersona(null, null)}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left ${!activePersona ? "bg-surface-high text-primary-container" : "text-on-surface-variant hover:bg-glass-fill hover:text-on-surface"}`}
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+                No persona
+              </button>
+              <div className="border-t border-glass-border my-1" />
+              {personas.length === 0 && (
+                <p className="px-4 py-2 text-xs text-on-surface-variant italic">No personas created yet</p>
+              )}
+              {personas.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setActivePersona(p.id, p.name)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left ${activePersonaId === p.id ? "bg-surface-high text-primary-container" : "text-on-surface-variant hover:bg-glass-fill hover:text-on-surface"}`}
+                >
+                  <span className={`material-symbols-outlined text-[18px] ${activePersonaId === p.id ? "text-primary-container" : "text-on-surface-variant/40"}`} style={activePersonaId === p.id ? { fontVariationSettings: "'FILL' 1" } : undefined}>psychology</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate">{p.name}</p>
+                    {p.description && <p className="text-[11px] text-on-surface-variant/60 truncate">{p.description}</p>}
+                  </div>
+                  {activePersonaId === p.id && (
+                    <span className="material-symbols-outlined text-[16px] text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto flex flex-col p-4 gap-2 custom-scrollbar">

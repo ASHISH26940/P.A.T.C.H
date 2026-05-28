@@ -1,10 +1,11 @@
 import axios from "axios";
 import { getAuthToken } from "./auth";
-import { Persona, PersonaCreate, PersonaUpdate } from "@/types/api";
+import { Persona, PersonaCreate, PersonaUpdate, DerivedPersonaSuggestion } from "@/types/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
 const apiClient = axios.create({
   baseURL: BASE_URL,
+  timeout: 60000,
 });
 
 // Use an interceptor to automatically add the Authorization header to all requests
@@ -97,6 +98,43 @@ export async function updatePersona(
       `/v1/persona/${personaId}`,
       personaData
     );
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+/**
+ * Derives persona suggestions from chat history analysis.
+ * Corresponds to: POST /persona/derive
+ * Requires at least 10 human messages in chat history.
+ */
+export async function derivePersonas(): Promise<DerivedPersonaSuggestion[]> {
+  try {
+    const response = await apiClient.post<DerivedPersonaSuggestion[]>("/v1/persona/derive");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      // 404 means not enough data, 422 means something else
+      if (status === 404 || status === 422) {
+        return [];
+      }
+    }
+    handleApiError(error);
+  }
+}
+
+/**
+ * Saves a derived persona suggestion as a real persona.
+ * Corresponds to: POST /persona/save-derived
+ * @param suggestion - The suggestion to persist.
+ */
+export async function saveDerivedPersona(
+  suggestion: DerivedPersonaSuggestion
+): Promise<Persona> {
+  try {
+    const response = await apiClient.post<Persona>("/v1/persona/save-derived", suggestion);
     return response.data;
   } catch (error) {
     handleApiError(error);

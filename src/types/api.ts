@@ -57,7 +57,10 @@ export interface ChatRequest {
   user_message: string;
   collection_name: string;
   user_id: string;
-  past_messages?: ApiChatMessage[]; // Uses the new, correct type for the API
+  session_id?: string;
+  past_messages?: ApiChatMessage[];
+  persona_id?: string;
+  persona_name?: string;
 }
 
 // Matches the ChatResponse model in chat.py
@@ -65,6 +68,7 @@ export interface ChatResponse {
   ai_response: string;
   source_documents?: DocumentQueryResult[];
   message_id: string;
+  derivation_available?: boolean;
 }
 
 //================================
@@ -131,6 +135,16 @@ export interface ContextResponse {
   user_id: string;
   context_data: DynamicContext;
   updated_at: string;
+}
+
+export interface DerivedPersonaSuggestion {
+  name: string;
+  description: string;
+  traits: string[];
+  goals: string[];
+  confidence: number;
+  sample_messages: string[];
+  message_count: number;
 }
 
 export interface PersonaCreate {
