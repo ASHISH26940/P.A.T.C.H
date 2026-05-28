@@ -35,7 +35,7 @@ export const RegisterForm: React.FC = () => {
         <p className="text-[#a8a29e] font-body-sm">Create your nocturnal workspace</p>
       </div>
 
-      <form className="space-y-stack-lg" onSubmit={handleSubmit}>
+      <form className="space-y-10" onSubmit={handleSubmit}>
         {error && (
           <div className="rounded-lg bg-error-container/10 border border-error-container/20 p-3 text-sm text-error text-center">{error}</div>
         )}

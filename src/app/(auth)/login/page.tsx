@@ -85,20 +85,7 @@ export default function LoginPage() {
 
           <LoginForm />
 
-          <div className="absolute bottom-8 right-8 flex gap-stack-md">
-            <a
-              className="text-xs text-[#a8a29e]/50 hover:text-[#f59e0b] transition-colors"
-              href="#"
-            >
-              v2.4.0-stable
-            </a>
-            <a
-              className="text-xs text-[#a8a29e]/50 hover:text-[#f59e0b] transition-colors"
-              href="#"
-            >
-              System Status
-            </a>
-          </div>
+
         </section>
       </div>
     </main>
