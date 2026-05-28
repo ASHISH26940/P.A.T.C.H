@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { GlassPanel } from "@/components/ui/GlassPanel";
-import { ingestVideo, getCookies, saveCookies } from "@/lib/api/memory";
+import { ingestVideo } from "@/lib/api/memory";
 import type { VideoIngestResult } from "@/lib/api/memory";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
@@ -30,21 +30,12 @@ function VideoContent() {
   const [error, setError] = useState<string | null>(null);
   const [extractions, setExtractions] = useState<ExtractionItem[]>([]);
   const [logs, setLogs] = useState<string[]>(["[SYSTEM]: Initializing...", "[READY]: Input pending"]);
-  const [cookiesText, setCookiesText] = useState("");
-  const [cookiesSaved, setCookiesSaved] = useState(false);
-  const [showCookies, setShowCookies] = useState(false);
   const abortRef = useRef(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) try { setExtractions(JSON.parse(saved)); } catch {}
   }, [storageKey]);
-
-  useEffect(() => {
-    getCookies().then((c) => {
-      if (c) { setCookiesText(c); setCookiesSaved(true); }
-    });
-  }, []);
 
   const persist = (items: ExtractionItem[]) => localStorage.setItem(storageKey, JSON.stringify(items));
 
@@ -202,55 +193,6 @@ function VideoContent() {
                       </>
                     )}
                   </button>
-
-                  <div className="border-t border-glass-border pt-4">
-                    <button
-                      onClick={() => setShowCookies(!showCookies)}
-                      className="text-[11px] text-on-surface-variant/60 hover:text-primary transition-all uppercase tracking-widest font-bold flex items-center gap-1"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">cookie</span>
-                      {showCookies ? "Hide" : "YouTube Cookie Auth"}
-                      {cookiesSaved && !showCookies && <span className="text-[10px] text-tertiary ml-1">(saved)</span>}
-                    </button>
-
-                    {showCookies && (
-                      <div className="mt-3 space-y-3">
-                        <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                          Export your YouTube cookies as a{" "}
-                          <a className="text-primary underline" href="https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp" target="_blank" rel="noopener">cookies.txt</a>{" "}
-                          file and paste the contents below. This bypasses YouTube's bot detection on server IPs.
-                        </p>
-                        <textarea
-                          value={cookiesText}
-                          onChange={(e) => { setCookiesText(e.target.value); setCookiesSaved(false); }}
-                          className="w-full h-28 bg-surface-lowest border border-glass-border rounded-lg p-3 text-[11px] font-mono text-on-surface placeholder:text-on-surface-variant/40 focus:border-primary-container outline-none transition-all resize-none"
-                          placeholder="Paste cookies.txt contents here..."
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={async () => {
-                              try {
-                                await saveCookies(cookiesText);
-                                setCookiesSaved(true);
-                                addLog("[COOKIES]: YouTube cookies saved");
-                              } catch {
-                                addLog("[ERROR]: Failed to save cookies");
-                              }
-                            }}
-                            className="px-4 py-2 bg-primary-container/20 border border-primary-container/40 rounded-lg text-[11px] text-primary font-bold uppercase tracking-widest hover:bg-primary-container/30 transition-all"
-                          >
-                            Save Cookies
-                          </button>
-                          <button
-                            onClick={() => { setCookiesText(""); setCookiesSaved(false); }}
-                            className="px-4 py-2 border border-glass-border rounded-lg text-[11px] text-on-surface-variant font-bold uppercase tracking-widest hover:border-error/40 hover:text-error transition-all"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </GlassPanel>
 
