@@ -79,7 +79,29 @@ export interface VideoIngestResult {
   subtitles_available: boolean; memories: { id: string; content: string; memory_type: string; importance: number }[];
 }
 
+export async function getCookies(): Promise<string | null> {
+  try {
+    const res = await axios.get(`${BASE_URL}/v1/user/cookies`, authHeaders());
+    return res.data.cookies ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveCookies(cookies: string): Promise<void> {
+  await axios.put(`${BASE_URL}/v1/user/cookies`, { cookies }, authHeaders());
+}
+
 export async function ingestVideo(url: string): Promise<VideoIngestResult> {
-  const res = await axios.post(`${BASE_URL}/v1/video/ingest`, { url }, authHeaders());
-  return res.data;
+  try {
+    const res = await axios.post(`${BASE_URL}/v1/video/ingest`, { url }, authHeaders());
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const detail = error.response?.data?.detail || error.message || "Ingestion failed";
+      console.error("Video ingest error:", detail, error.response?.data);
+      throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    }
+    throw error;
+  }
 }

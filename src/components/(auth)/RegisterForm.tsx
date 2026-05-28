@@ -1,24 +1,25 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { registerUser } from "@/lib/api/auth";
+import { registerUser, loginUser } from "@/lib/api/auth";
 
 export const RegisterForm: React.FC = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
     setIsLoading(true);
     try {
       await registerUser({ username, ...(email ? { email } : {}), password });
-      setSuccess("Account created! You can now sign in.");
+      await loginUser({ username, password });
+      router.replace(`/chat/${crypto.randomUUID()}`);
     } catch (err: any) {
       setError(err.message || "Registration failed.");
     } finally {
@@ -38,9 +39,6 @@ export const RegisterForm: React.FC = () => {
       <form className="space-y-10" onSubmit={handleSubmit}>
         {error && (
           <div className="rounded-lg bg-error-container/10 border border-error-container/20 p-3 text-sm text-error text-center">{error}</div>
-        )}
-        {success && (
-          <div className="rounded-lg bg-primary-container/10 border border-primary-container/20 p-3 text-sm text-primary-container text-center">{success}</div>
         )}
 
         <div className="space-y-2">
