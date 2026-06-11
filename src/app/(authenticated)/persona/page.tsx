@@ -7,7 +7,7 @@ import { DefaultPersonaCard } from "@/components/persona/DefaultPersonaCard";
 import { PersonaSkeleton } from "@/components/persona/PersonaSkeleton";
 import { cachedFetch, clearCache } from "@/lib/datacache";
 
-const DEFAULT_PERSONAS: Omit<Persona, "id">[] = [
+const DEFAULT_PERSONAS: { name: string; description: string; traits: string[]; goals: string[] }[] = [
   {
     name: "Video Strategist",
     description: "Content strategy, audience retention, and hook optimization.",
