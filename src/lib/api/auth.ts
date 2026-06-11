@@ -6,6 +6,17 @@ const DEV_MODE = false;
 
 export const TOKEN_STORAGE_KEY = "jwt_token";
 
+function storeToken(token: string, remember: boolean) {
+  if (typeof window === "undefined") return;
+  if (remember) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  } else {
+    sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+}
+
 function extractErrorDetail(data: unknown): string {
   if (!data) return "An unknown error occurred";
   if (typeof data === "string") return data;
@@ -46,13 +57,13 @@ export async function registerUser(request: RegisterRequest): Promise<User> {
   }
 }
 
-export async function loginUser(request: LoginRequest): Promise<User> {
+export async function loginUser(request: LoginRequest, remember: boolean = false): Promise<User> {
   if (DEV_MODE) {
     await new Promise((r) => setTimeout(r, 500));
     if (!request.username || !request.password) throw new Error("Username and password required");
     const user: User = { id: 1, username: request.username, email: "dev@patch.local" };
     if (typeof window !== "undefined") {
-      localStorage.setItem(TOKEN_STORAGE_KEY, "dev_token");
+      storeToken("dev_token", remember);
       localStorage.setItem("dev_user", JSON.stringify(user));
     }
     return user;
@@ -73,7 +84,7 @@ export async function loginUser(request: LoginRequest): Promise<User> {
     const tokenData = response.data;
 
     if (typeof window !== "undefined") {
-      localStorage.setItem(TOKEN_STORAGE_KEY, tokenData.access_token);
+      storeToken(tokenData.access_token, remember);
     }
 
     const userData = await getCurrentUser();
@@ -112,13 +123,14 @@ export async function getCurrentUser(): Promise<User> {
 export function logoutUser(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     localStorage.removeItem("dev_user");
   }
 }
 
 export function getAuthToken(): string | null {
   if (typeof window !== "undefined") {
-    return localStorage.getItem(TOKEN_STORAGE_KEY);
+    return localStorage.getItem(TOKEN_STORAGE_KEY) || sessionStorage.getItem(TOKEN_STORAGE_KEY);
   }
   return null;
 }

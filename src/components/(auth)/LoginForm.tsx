@@ -18,7 +18,7 @@ export const LoginForm: React.FC = () => {
     setError(null);
     setIsLoading(true);
     try {
-      await loginUser({ username, password });
+      await loginUser({ username, password }, rememberMe);
       router.replace(`/chat/${crypto.randomUUID()}`);
     } catch (err: any) {
       setError(err.message || "Login failed.");
