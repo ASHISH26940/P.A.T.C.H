@@ -5,6 +5,7 @@ import type { Persona } from "@/types/api";
 import { PersonaCard } from "@/components/persona/PersonaCard";
 import { DefaultPersonaCard } from "@/components/persona/DefaultPersonaCard";
 import { PersonaSkeleton } from "@/components/persona/PersonaSkeleton";
+import { cachedFetch, clearCache } from "@/lib/datacache";
 
 const DEFAULT_PERSONAS: Omit<Persona, "id">[] = [
   {
@@ -63,7 +64,7 @@ export default function PersonaPage() {
 
   const loadPersonas = useCallback(async () => {
     try {
-      const data = await getAllPersonas();
+      const data = await cachedFetch("personas", () => getAllPersonas());
       setPersonas(data);
     } catch {
       setPersonas([]);
@@ -101,6 +102,7 @@ export default function PersonaPage() {
     try {
       await deletePersona(id);
       setPersonas((prev) => prev.filter((p) => p.id !== id));
+      clearCache("personas");
     } catch {
       /* ignore */
     }

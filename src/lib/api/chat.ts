@@ -67,6 +67,7 @@ export async function fetchChatHistory(limit = 100): Promise<HistoryMessage[]> {
 export async function sendChatMessageStream(
   request: ChatRequest,
   callbacks: StreamCallbacks,
+  signal?: AbortSignal,
 ): Promise<void> {
   const token = getAuthToken();
   if (!token) {
@@ -82,6 +83,7 @@ export async function sendChatMessageStream(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(request),
+      signal,
     });
 
     if (!response.ok) {
@@ -95,6 +97,8 @@ export async function sendChatMessageStream(
       callbacks.onError("Stream not available");
       return;
     }
+
+    signal?.addEventListener("abort", () => reader.cancel(), { once: true });
 
     const decoder = new TextDecoder();
     let buffer = "";
@@ -133,6 +137,7 @@ export async function sendChatMessageStream(
       }
     }
   } catch (error: any) {
+    if (error?.name === "AbortError") return;
     callbacks.onError(error.message || "Network error");
   }
 }

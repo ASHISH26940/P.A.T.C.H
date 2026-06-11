@@ -18,6 +18,10 @@ export default function ChatPage() {
     ? params.chatId[0]
     : params.chatId;
 
+  useEffect(() => {
+    if (chatId) localStorage.setItem("patch_last_chat", chatId);
+  }, [chatId]);
+
   const collectionName = "general_knowledge";
 
   const {

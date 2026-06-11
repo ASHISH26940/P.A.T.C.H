@@ -43,7 +43,23 @@ export function removeConversation(userId: string | number, id: string) {
     convKey(userId),
     JSON.stringify(getConversations(userId).filter((c) => c.id !== id)),
   );
+  clearMessages(userId, id);
+  const deleted = JSON.parse(localStorage.getItem("patch_deleted_convos") || "[]");
+  if (!deleted.includes(id)) {
+    deleted.push(id);
+    localStorage.setItem("patch_deleted_convos", JSON.stringify(deleted));
+  }
   notify();
+}
+
+export function isConversationDeleted(id: string): boolean {
+  if (typeof window === "undefined") return false;
+  const deleted = JSON.parse(localStorage.getItem("patch_deleted_convos") || "[]");
+  return deleted.includes(id);
+}
+
+export function clearDeletedConversations() {
+  localStorage.removeItem("patch_deleted_convos");
 }
 
 export function updateConversationTitle(userId: string | number, id: string, title: string) {

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ForceGraph } from "@/components/graph/ForceGraph";
 import { getRecentMemories, getAllLinks, getMemory, createLink, deleteLink } from "@/lib/api/memory";
 import type { MemoryItem, MemoryLink } from "@/lib/api/memory";
+import { cachedFetch, clearCache } from "@/lib/datacache";
 
 interface LinkDisplay {
   id: string;
@@ -42,7 +43,7 @@ export default function GraphPage() {
     let cancelled = false;
     const load = async () => {
       try {
-        const mems = await getRecentMemories(50);
+        const mems = await cachedFetch("graph:memories", () => getRecentMemories(50));
         if (cancelled) return;
         setMemories(mems);
 
@@ -59,7 +60,7 @@ export default function GraphPage() {
 
         let allLinks: MemoryLink[];
         try {
-          const res = await getAllLinks();
+          const res = await cachedFetch("graph:links", () => getAllLinks());
           allLinks = res.links;
         } catch {
           allLinks = [];
@@ -150,6 +151,68 @@ export default function GraphPage() {
         })));
         return updated;
       });
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleLinkCreated = useCallback(async () => {
+    setShowAddModal(false);
+    clearCache("graph:");
+    try {
+      const res = await getAllLinks();
+      const allLinks = res.links;
+      const mems = await getRecentMemories(50);
+      setMemories(mems);
+
+      const memoryMap = new Map<string, string>();
+      const typeMap = new Map<string, string>();
+      const importanceMap = new Map<string, number>();
+      const contentMap = new Map<string, string>();
+      mems.forEach((m) => {
+        memoryMap.set(m.id, m.content.split("\n")[0].slice(0, 60));
+        typeMap.set(m.id, m.memory_type);
+        importanceMap.set(m.id, m.importance);
+        contentMap.set(m.id, m.content);
+      });
+
+      const missingIds = new Set<string>();
+      for (const link of allLinks) {
+        if (!memoryMap.has(link.source_memory_id)) missingIds.add(link.source_memory_id);
+        if (!memoryMap.has(link.target_memory_id)) missingIds.add(link.target_memory_id);
+      }
+      for (const mid of missingIds) {
+        try {
+          const m = await getMemory(mid);
+          memoryMap.set(m.id, m.content.split("\n")[0].slice(0, 60));
+          typeMap.set(m.id, m.memory_type);
+          importanceMap.set(m.id, m.importance);
+          contentMap.set(m.id, m.content);
+        } catch { /* skip */ }
+      }
+
+      const resolved: LinkDisplay[] = [];
+      const seen = new Set<string>();
+      for (const link of allLinks) {
+        const src = memoryMap.get(link.source_memory_id) || link.source_memory_id;
+        const tgt = memoryMap.get(link.target_memory_id) || link.target_memory_id;
+        const key = `${link.source_memory_id}|${link.target_memory_id}|${link.relationship}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        resolved.push({
+          id: link.id,
+          source: src,
+          sourceId: link.source_memory_id,
+          relationship: link.relationship,
+          target: tgt,
+          targetId: link.target_memory_id,
+        });
+      }
+
+      setLinks(resolved);
+      setGraphLinks(resolved.map((l) => ({
+        source: l.sourceId,
+        target: l.targetId,
+        relationship: l.relationship,
+      })));
     } catch { /* ignore */ }
   }, []);
 
@@ -255,7 +318,7 @@ export default function GraphPage() {
           onClose={() => setShowAddModal(false)}
           onCreated={() => {
             setShowAddModal(false);
-            window.location.reload();
+            handleLinkCreated();
           }}
         />
       )}

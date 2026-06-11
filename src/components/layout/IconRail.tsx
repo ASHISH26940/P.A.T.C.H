@@ -19,6 +19,12 @@ const navItems = [
   { href: "/persona", icon: "psychology", label: "Persona" },
 ];
 
+function getLastChatLink(): string {
+  if (typeof window === "undefined") return "/chat";
+  const last = localStorage.getItem("patch_last_chat");
+  return last ? `/chat/${last}` : `/chat/${crypto.randomUUID()}`;
+}
+
 export const IconRail: React.FC = () => {
   const pathname = usePathname();
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
@@ -56,7 +62,7 @@ export const IconRail: React.FC = () => {
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={item.href === "/chat" ? getLastChatLink() : item.href}
                 onMouseEnter={(e) => showTooltip(e, item.label)}
                 onMouseLeave={hideTooltip}
                 className={clsx(

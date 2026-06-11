@@ -122,7 +122,7 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
           </button>
 
           {personaOpen && (
-            <div className="absolute bottom-full mb-2 left-0 right-0 bg-surface border border-glass-border rounded-xl shadow-2xl py-2 z-50 max-h-64 overflow-y-auto">
+            <div className="absolute top-full mt-2 left-0 right-0 bg-surface border border-glass-border rounded-xl shadow-2xl py-2 z-50 max-h-64 overflow-y-auto">
               <button
                 onClick={() => setActivePersona(null, null)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left ${!activePersona ? "bg-surface-high text-primary-container" : "text-on-surface-variant hover:bg-glass-fill hover:text-on-surface"}`}

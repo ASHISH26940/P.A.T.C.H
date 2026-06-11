@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { sendChatMessageStream, fetchChatHistory } from "@/lib/api/chat";
 import { createMemory } from "@/lib/api/memory";
-import { addConversation, getMessages, saveMessages, getConversations } from "@/lib/localstore";
+import { addConversation, getMessages, saveMessages, getConversations, isConversationDeleted } from "@/lib/localstore";
 
 interface UseChatOptions {
   userId: number | string;
@@ -14,6 +14,7 @@ interface SourceDoc {
   content?: string;
   metadata?: Record<string, unknown>;
   distance?: number;
+  type?: string;
 }
 
 export interface ChatMessage {
@@ -32,6 +33,7 @@ export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
   const [error, setError] = useState<string | null>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
   const chatIdRef = useRef(chatId);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!chatId) return;
@@ -42,6 +44,8 @@ export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
     setError(null);
     setIsLoading(false);
     chatIdRef.current = chatId;
+    abortRef.current?.abort();
+    abortRef.current = null;
   }, [chatId, userId]);
 
   useEffect(() => {
@@ -74,7 +78,7 @@ export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
         }
 
         const convos = getConversations(userId);
-        if (!convos.find((c) => c.id === sid)) {
+        if (!convos.find((c) => c.id === sid) && !isConversationDeleted(sid)) {
           const first = msgs.find((m) => m.role === "user") || msgs[0];
           addConversation(userId, sid, first.content.slice(0, 32), first.content.slice(0, 80));
         }
@@ -87,6 +91,13 @@ export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
       }
     });
   }, [chatId, userId]);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      abortRef.current = null;
+    };
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -107,6 +118,10 @@ export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
       addConversation(userId, chatId, content.slice(0, 32), content.slice(0, 80));
 
       setIsLoading(true);
+
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       const cmdsList = "**Commands:**\n- `/add <text>` — Save text to memory\n- `/cmds` — Show this command list";
 
@@ -211,9 +226,11 @@ export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
             },
             onDone: (result) => {
               if (created) {
+                const docs = ((result.source_documents || []) as SourceDoc[])
+                  .filter((d) => d.type !== "qa" && d.type !== "extraction");
                 const final = messagesRef.current.map((m) =>
                   m.id === aiMsgId
-                    ? { ...m, sourceDocuments: result.source_documents as SourceDoc[] }
+                    ? { ...m, sourceDocuments: docs }
                     : m,
                 );
                 messagesRef.current = final;
@@ -248,6 +265,7 @@ export function useChat({ userId, collectionName, chatId }: UseChatOptions) {
               setIsLoading(false);
             },
           },
+          controller.signal,
         );
       } catch {
         setIsLoading(false);

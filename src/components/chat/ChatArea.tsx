@@ -7,6 +7,7 @@ interface SourceDoc {
   content?: string;
   metadata?: Record<string, unknown>;
   distance?: number;
+  type?: string;
 }
 
 interface Message {
@@ -45,15 +46,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading }) => {
       {}) as Record<string, unknown>;
     return (
       (meta.title as string) ||
+      (meta.video_title as string) ||
       (meta.source_type as string) ||
       (meta.source as string) ||
       (meta.filename as string) ||
       (meta.document_type as string) ||
       (meta.name as string) ||
-      // last resort: first 40 chars of content
-      ((doc.content || (doc as any).document?.content || "") as string)
-        .slice(0, 40)
-        .trim() ||
+      (doc.type as string) ||
       `Doc ${String(doc.id || "?").slice(0, 6)}`
     );
   };

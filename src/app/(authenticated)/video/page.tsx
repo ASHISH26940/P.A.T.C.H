@@ -6,7 +6,7 @@ import { ingestVideo } from "@/lib/api/memory";
 import type { VideoIngestResult } from "@/lib/api/memory";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
-const STEP_LABELS = ["Fetching Source", "Transcribing", "Extracting", "Linking Graph"];
+const STEP_LABELS = ["Fetching Metadata", "Extracting Insights", "Storing Memories"];
 
 interface ExtractionItem {
   title: string;
@@ -52,7 +52,7 @@ function VideoContent() {
     addLog("[SYSTEM]: Starting ingestion...");
 
     // Advance through steps as the API processes
-    advance(1).then(() => addLog("[FETCH]: Retrieving video source..."));
+    advance(1).then(() => addLog("[FETCH]: Retrieving video metadata..."));
 
     try {
       const result: VideoIngestResult = await ingestVideo(url.trim());
@@ -62,10 +62,8 @@ function VideoContent() {
       addLog(`[SOURCE]: Fetched "${result.video_title}"`);
 
       await advance(3);
-      if (result.subtitles_available) addLog("[TRANSCRIBE]: Subtitles found and processed");
-      addLog(`[EXTRACT]: ${result.memories.length} memories created`);
-
-      await advance(4);
+      addLog(`[EXTRACT]: ${result.memories.length} insights extracted`);
+      addLog("[STORE]: Memories saved to database");
 
       setExtractions((prev) => {
         const next = [{
@@ -89,54 +87,6 @@ function VideoContent() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-surface-dim">
-      {/* ── Step bar ── */}
-      <div className="bg-surface-lowest border-b border-glass-border flex-shrink-0">
-        <div className="max-w-6xl mx-auto px-8 py-4 grid grid-cols-4 gap-4">
-          {STEP_LABELS.map((label, i) => {
-            const state = getStepState(i, stepIndex);
-            return (
-              <div key={label} className="flex items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold border ${
-                    state === "complete"
-                      ? "bg-primary-container/20 border-primary text-primary"
-                      : state === "current"
-                        ? "bg-primary-container/10 border-primary-container text-primary-container"
-                        : "bg-surface-high border-glass-border text-on-surface-variant"
-                  }`}
-                >
-                  {state === "complete" ? (
-                    <span className="material-symbols-outlined text-[16px]">check</span>
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p
-                    className={`text-[10px] uppercase tracking-widest font-bold leading-none mb-0.5 ${
-                      state === "complete"
-                        ? "text-primary/60"
-                        : state === "current"
-                          ? "text-primary-container"
-                          : "text-on-surface-variant/50"
-                    }`}
-                  >
-                    {state === "complete" ? "Complete" : state === "current" ? "Current" : "Pending"}
-                  </p>
-                  <p
-                    className={`text-sm truncate ${
-                      state === "pending" ? "text-on-surface-variant" : "text-on-surface"
-                    }`}
-                  >
-                    {label}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* ── Main content ── */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto px-8 py-8">
@@ -242,7 +192,7 @@ function VideoContent() {
               {/* Metrics */}
               <GlassPanel className="p-6 rounded-xl">
                 <h4 className="text-[11px] text-primary uppercase tracking-widest font-bold mb-5">
-                  Extraction Metrics
+                  Ingestion Metrics
                 </h4>
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">
