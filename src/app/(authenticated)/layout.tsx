@@ -2,12 +2,15 @@
 import React from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { Sidebar } from "@/components/chat/Sidebar";
 import { IconRail } from "@/components/layout/IconRail";
 import { useEffect } from "react";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 
 const AuthenticatedShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
+  useSessionTimeout(logout, 15 * 60 * 1000);
 
   useEffect(() => {
     if (!isLoading && !user) router.replace("/login");
@@ -25,6 +28,7 @@ const AuthenticatedShell: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <div className="flex h-screen overflow-hidden">
       <IconRail />
+      <Sidebar onLogout={logout} username={user.username} userId={user.id} />
       {children}
     </div>
   );

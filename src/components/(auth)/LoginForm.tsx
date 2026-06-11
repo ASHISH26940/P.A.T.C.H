@@ -7,6 +7,8 @@ import Link from "next/link";
 export const LoginForm: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -34,13 +36,13 @@ export const LoginForm: React.FC = () => {
         <p className="text-[#a8a29e] font-body-sm">Sign in to your nocturnal workspace</p>
       </div>
 
-      <form className="space-y-10" onSubmit={handleSubmit}>
+      <form className="space-y-5" onSubmit={handleSubmit}>
         {error && (
           <div className="rounded-lg bg-error-container/10 border border-error-container/20 p-3 text-sm text-error text-center">{error}</div>
         )}
 
         <div className="space-y-2">
-          <label className="font-label-md text-label-md text-[#a8a29e] block" htmlFor="identifier">Creator ID</label>
+          <label className="font-label-md text-label-md text-[#a8a29e] block" htmlFor="identifier">Username</label>
           <div className="relative group">
             <input
               id="identifier"
@@ -57,21 +59,38 @@ export const LoginForm: React.FC = () => {
 
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="font-label-md text-label-md text-[#a8a29e] block" htmlFor="password">Secure Key</label>
+            <label className="font-label-md text-label-md text-[#a8a29e] block" htmlFor="password">Password</label>
             <a className="text-xs text-[#f59e0b] hover:underline transition-all" href="#">Lost access?</a>
           </div>
           <div className="relative group">
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-[#0e0e12] border border-glass-border focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] text-[#f5f5f4] rounded-lg py-3 px-4 outline-none transition-all placeholder:text-[#a8a29e]/30 font-mono-code text-sm"
+              className="w-full bg-[#0e0e12] border border-glass-border focus:border-[#f59e0b] focus:ring-1 focus:ring-[#f59e0b] text-[#f5f5f4] rounded-lg py-3 px-4 outline-none transition-all placeholder:text-[#a8a29e]/30 font-mono-code text-sm pr-10"
               placeholder="••••••••"
             />
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#a08e7a]/30 group-focus-within:text-primary-container transition-colors">key</span>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a08e7a]/50 hover:text-[#f59e0b] transition-colors"
+            >
+              <span className="material-symbols-outlined text-lg">{showPassword ? "visibility_off" : "visibility"}</span>
+            </button>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            id="remember"
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="accent-[#f59e0b] w-4 h-4 rounded border-glass-border bg-[#0e0e12]"
+          />
+          <label htmlFor="remember" className="text-sm text-[#a8a29e] cursor-pointer select-none">Remember me</label>
         </div>
 
         <button
